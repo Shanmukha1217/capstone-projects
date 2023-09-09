@@ -1,5 +1,5 @@
 //jshint esversion:6
-
+require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
@@ -11,8 +11,9 @@ app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
+const hostDB = process.env.MONGO_DB_URL;
 mongoose
-  .connect("mongodb://localhost:27017/userDB")
+  .connect(`${hostDB}/userDB`)
   .then(() => {
     console.log("DB connection successfull");
   })
@@ -23,7 +24,7 @@ const userSchema = new mongoose.Schema({
   password: String,
 });
 
-const secret = "Hackifyoucanthisismysecret";
+const secret = process.env.SECRET;
 userSchema.plugin(encrypt, { secret: secret, encryptedFields: ["password"] });
 
 const User = new mongoose.model("User", userSchema);
@@ -64,7 +65,6 @@ app.post("/login", async (req, res) => {
   await User.findOne({ email: username })
     .then((foundUser) => {
       if (foundUser.password == password) {
-        console.log(foundUser.password);
         res.render("secrets");
       } else {
         res.send("No Credentials found");
